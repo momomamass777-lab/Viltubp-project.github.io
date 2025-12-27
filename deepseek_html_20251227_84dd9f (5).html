@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viltud - Видеохостинг</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f0f;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background-color: #0f0f0f;
+            padding: 10px 0;
+            border-bottom: 1px solid #303030;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff0000;
+            text-decoration: none;
+        }
+
+        .search-bar {
+            flex: 0 1 600px;
+            display: flex;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px 20px;
+            background-color: #121212;
+            border: 1px solid #303030;
+            border-right: none;
+            color: #fff;
+            border-radius: 40px 0 0 40px;
+        }
+
+        .search-bar button {
+            padding: 10px 20px;
+            background-color: #222;
+            border: 1px solid #303030;
+            border-left: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 0 40px 40px 0;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .upload-btn, .login-btn {
+            padding: 8px 16px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .login-btn {
+            background-color: #3da6ff;
+        }
+
+        .admin-btn {
+            padding: 8px 16px;
+            background-color: #ff6b00;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Main Content */
+        main {
+            padding: 20px 0;
+            min-height: calc(100vh - 150px);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .video-card {
+            background-color: #1f1f1f;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 180px;
+            background-color: #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .video-card:hover .video-thumbnail img {
+            transform: scale(1.05);
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background-color: rgba(0,0,0,0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .video-info {
+            padding: 15px;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .video-channel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .video-stats {
+            display: flex;
+            gap: 15px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        /* Auth Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #1f1f1f;
+            padding: 40px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .auth-form input {
+            padding: 12px;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .auth-form button {
+            padding: 12px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .auth-switch:hover {
+            color: #ff0000;
+        }
+
+        /* Video Player */
+        .video-player {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .video-container {
+            width: 100%;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .video-player-element {
+            width: 100%;
+            height: 600px;
+        }
+
+        .video-details {
+            padding: 20px;
+            background-color: #1f1f1f;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 8px 20px;
+            background-color: #2d2d2d;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .action-btn.active {
+            background-color: #ff0000;
+        }
+
+        .action-btn:hover {
+            background-color: #444;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            background-color: #1f1f1f;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .comments-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .comment-form {
+            margin-bottom: 30px;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 12px;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 10px;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .comment-submit {
+            padding: 10px 20px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .comment {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #3da6ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .comment-username {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .comment-date {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .comment-text {
+            color: #fff;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-like {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+
+        .comment-like:hover {
+            background-color: #3a3a3a;
+        }
+
+        .comment-like.active {
+            color: #ff0000;
+        }
+
+        .comment-delete {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .comment-delete:hover {
+            background-color: #3a3a3a;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            display: none;
+            background-color: #1f1f1f;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .admin-section {
+            margin-bottom: 30px;
+        }
+
+        .admin-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #ff6b00;
+            border-bottom: 2px solid #ff6b00;
+            padding-bottom: 10px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+
+        .admin-table th {
+            background-color: #333;
+            font-weight: 600;
+        }
+
+        .admin-btn-small {
+            padding: 5px 10px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .admin-btn-small.primary {
+            background-color: #3da6ff;
+        }
+
+        /* Support System */
+        .support-section {
+            background-color: #1f1f1f;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .support-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .support-form textarea {
+            padding: 12px;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .ticket {
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .ticket-user {
+            color: #3da6ff;
+            font-weight: 600;
+        }
+
+        .ticket-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-open {
+            background-color: #ff6b00;
+        }
+
+        .status-closed {
+            background-color: #4caf50;
+        }
+
+        /* Upload Form */
+        .upload-form {
+            background-color: #1f1f1f;
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .upload-form input,
+        .upload-form textarea,
+        .upload-form select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .upload-preview {
+            width: 100%;
+            height: 300px;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Profile */
+        .profile-header {
+            background-color: #1f1f1f;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: #333;
+            font-size: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .profile-info h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff0000;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #0f0f0f;
+            padding: 40px 0;
+            margin-top: 50px;
+            border-top: 1px solid #303030;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-section h3 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #ff0000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .video-player-element {
+                height: 300px;
+            }
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 8px;
+            z-index: 1001;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.error {
+            background-color: #ff0000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Navigation */
+        .nav-link {
+            color: #aaa;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-link:hover {
+            background-color: #2d2d2d;
+            color: #fff;
+        }
+
+        .nav-link.active {
+            background-color: #ff0000;
+            color: white;
+        }
+
+        /* Video Player Page */
+        #video-player-page {
+            display: none;
+        }
+
+        .next-video-btn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #3da6ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .video-recommendations {
+            margin-top: 30px;
+        }
+
+        .video-recommendations h2 {
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        /* File upload preview */
+        .thumbnail-preview {
+            width: 100%;
+            height: 200px;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .thumbnail-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo" onclick="showPage('home')">
+                    <span style="color: #ff0000">Viltud</span>
+                </a>
+                
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="Поиск видео...">
+                    <button onclick="searchVideos()">🔍</button>
+                </div>
+                
+                <div class="user-actions">
+                    <button class="upload-btn" onclick="showPage('upload')" id="upload-btn" style="display: none;">
+                        📤 Загрузить
+                    </button>
+                    <a href="#" class="nav-link" onclick="showPage('profile'); return false;" id="profile-btn" style="display: none;">
+                        👤 Профиль
+                    </a>
+                    <button class="login-btn" onclick="showAuthModal()" id="login-btn">
+                        Войти
+                    </button>
+                    <button class="admin-btn" onclick="toggleAdminPanel()" id="admin-btn" style="display: none;">
+                        Админ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Home Page -->
+            <div id="home-page">
+                <h1>Рекомендуемые видео</h1>
+                <div class="video-grid" id="video-grid">
+                    <!-- Videos will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Video Player -->
+            <div id="video-player-page">
+                <div class="video-player">
+                    <div class="video-container">
+                        <video id="video-player-element" class="video-player-element" controls autoplay>
+                            Ваш браузер не поддерживает видео тег.
+                        </video>
+                    </div>
+                    <div class="video-details">
+                        <h1 id="video-title"></h1>
+                        <div class="video-stats">
+                            <span id="video-views"></span> просмотров • 
+                            <span id="video-date"></span> • 
+                            <span id="video-category"></span>
+                        </div>
+                        <div class="video-actions">
+                            <button class="action-btn" id="like-btn" onclick="likeVideo()">
+                                👍 <span id="like-count">0</span>
+                            </button>
+                            <button class="action-btn" onclick="subscribeToChannel()" id="subscribe-btn">
+                                📌 Подписаться <span id="subscriber-count">0</span>
+                            </button>
+                            <button class="action-btn" onclick="showPage('support')">
+                                🛠 Техподдержка
+                            </button>
+                        </div>
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #444;">
+                            <h3>Описание</h3>
+                            <p id="video-description"></p>
+                        </div>
+                    </div>
+
+                    <!-- Next Video Button -->
+                    <button class="next-video-btn" onclick="playNextVideo()">
+                        ▶️ Следующее видео
+                    </button>
+
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h2 class="comments-title">Комментарии <span id="comments-count">0</span></h2>
+                        
+                        <!-- Comment Form -->
+                        <div class="comment-form" id="comment-form">
+                            <textarea class="comment-input" id="comment-text" placeholder="Добавьте комментарий..."></textarea>
+                            <button class="comment-submit" onclick="addComment()">Комментировать</button>
+                        </div>
+
+                        <!-- Comments List -->
+                        <div class="comments-list" id="comments-list">
+                            <!-- Comments will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Recommended Videos -->
+                    <div class="video-recommendations">
+                        <h2>Рекомендуем посмотреть</h2>
+                        <div class="video-grid" id="recommended-videos">
+                            <!-- Recommended videos will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Page -->
+            <div id="upload-page" style="display: none;">
+                <h1>Загрузить видео</h1>
+                <div class="upload-form">
+                    <input type="text" id="video-title-input" placeholder="Название видео*" required>
+                    <textarea id="video-description-input" placeholder="Описание видео*" required></textarea>
+                    <select id="video-category-input">
+                        <option value="">Выберите категорию</option>
+                        <option value="Развлечения">Развлечения</option>
+                        <option value="Образование">Образование</option>
+                        <option value="Музыка">Музыка</option>
+                        <option value="Игры">Игры</option>
+                        <option value="Технологии">Технологии</option>
+                        <option value="Спорт">Спорт</option>
+                        <option value="Другое">Другое</option>
+                    </select>
+                    
+                    <div class="thumbnail-preview" id="thumbnail-preview">
+                        <img id="thumbnail-preview-img" src="" alt="Превью">
+                    </div>
+                    
+                    <input type="file" id="thumbnail-file" accept="image/*" onchange="previewThumbnail()">
+                    <small style="color: #aaa; margin-bottom: 20px; display: block;">Загрузите превью для видео (рекомендуется 1280x720)</small>
+                    
+                    <input type="file" id="video-file" accept="video/*" required>
+                    <small style="color: #aaa; margin-bottom: 20px; display: block;">Поддерживаемые форматы: MP4, WebM, OGG (максимум 500MB)</small>
+                    
+                    <button onclick="uploadVideo()" class="upload-btn" style="width: 100%;">Загрузить видео</button>
+                </div>
+            </div>
+
+            <!-- Support Page -->
+            <div id="support-page" style="display: none;">
+                <div class="support-section">
+                    <h1>Техподдержка</h1>
+                    <div class="support-form">
+                        <textarea id="support-message" placeholder="Опишите вашу проблему..."></textarea>
+                        <button onclick="sendSupportTicket()" class="upload-btn">Отправить обращение</button>
+                    </div>
+                    
+                    <!-- Admin Support Tickets (visible only for admin) -->
+                    <div id="admin-tickets" style="display: none;">
+                        <h2 class="admin-title">Обращения пользователей</h2>
+                        <div id="tickets-list"></div>
+                    </div>
+                    
+                    <!-- User's Tickets -->
+                    <div id="user-tickets">
+                        <h2>Мои обращения</h2>
+                        <div id="user-tickets-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel -->
+            <div id="admin-panel" class="admin-panel" style="display: none;">
+                <h1 class="admin-title">Административная панель</h1>
+                
+                <div class="admin-section">
+                    <h2 class="admin-title">Пользователи</h2>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Имя</th>
+                                <th>Роль</th>
+                                <th>Видео</th>
+                                <th>Подписчики</th>
+                                <th>Комментарии</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="admin-section">
+                    <h2 class="admin-title">Видео</h2>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название</th>
+                                <th>Автор</th>
+                                <th>Просмотры</th>
+                                <th>Лайки</th>
+                                <th>Комментарии</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="videos-table">
+                            <!-- Videos will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="admin-section">
+                    <h2 class="admin-title">Комментарии</h2>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Видео</th>
+                                <th>Автор</th>
+                                <th>Текст</th>
+                                <th>Дата</th>
+                                <th>Лайки</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comments-table">
+                            <!-- Comments will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="admin-section">
+                    <h2 class="admin-title">Управление аккаунтами</h2>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <input type="text" id="switch-username" placeholder="Имя пользователя" style="flex: 1;">
+                        <button onclick="switchAccount()" class="admin-btn-small primary">Переключиться</button>
+                    </div>
+                    <button onclick="deleteUserAccount()" class="admin-btn-small">Удалить текущий аккаунт</button>
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="profile-page" style="display: none;">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">U</div>
+                    <div class="profile-info">
+                        <h1 id="profile-username"></h1>
+                        <p id="profile-email"></p>
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="profile-videos">0</div>
+                                <div class="stat-label">Видео</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profile-subscribers">0</div>
+                                <div class="stat-label">Подписчики</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profile-likes">0</div>
+                                <div class="stat-label">Лайки</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profile-views">0</div>
+                                <div class="stat-label">Просмотры</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="profile-comments">0</div>
+                                <div class="stat-label">Комментарии</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 style="margin-bottom: 20px;">Мои видео</h2>
+                <div id="profile-videos-grid" class="video-grid">
+                    <!-- User's videos will be loaded here -->
+                </div>
+
+                <h2 style="margin-top: 40px; margin-bottom: 20px;">Мои комментарии</h2>
+                <div id="profile-comments-list" class="comments-list">
+                    <!-- User's comments will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="auth-title">Вход</h2>
+            <div class="auth-form" id="login-form">
+                <input type="text" id="login-username" placeholder="Имя пользователя">
+                <input type="password" id="login-password" placeholder="Пароль">
+                <button onclick="login()">Войти</button>
+            </div>
+            <div class="auth-form" id="register-form" style="display: none;">
+                <input type="text" id="register-username" placeholder="Имя пользователя">
+                <input type="password" id="register-password" placeholder="Пароль">
+                <input type="email" id="register-email" placeholder="Email">
+                <button onclick="register()">Зарегистрироваться</button>
+            </div>
+            <div class="auth-switch" id="auth-switch" onclick="toggleAuthForm()">
+                Нет аккаунта? Зарегистрируйтесь
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Viltud</h3>
+                    <p>Видеохостинг для вашего творчества</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Навигация</h3>
+                    <ul class="footer-links">
+                        <li><a href="#" onclick="showPage('home')">Главная</a></li>
+                        <li><a href="#" onclick="showPage('support')">Техподдержка</a></li>
+                        <li><a href="#" onclick="showAuthModal()">Войти</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Правила</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Условия использования</a></li>
+                        <li><a href="#">Политика конфиденциальности</a></li>
+                        <li><a href="#">Правила сообщества</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Data storage
+        let users = JSON.parse(localStorage.getItem('viltud_users')) || [];
+        let videos = JSON.parse(localStorage.getItem('viltud_videos')) || [];
+        let supportTickets = JSON.parse(localStorage.getItem('viltud_tickets')) || [];
+        let comments = JSON.parse(localStorage.getItem('viltud_comments')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('viltud_currentUser')) || null;
+        let subscriptions = JSON.parse(localStorage.getItem('viltud_subscriptions')) || {};
+        let currentVideoId = null;
+        let currentVideoElement = null;
+
+        // Default admin user
+        const DEFAULT_ADMIN = {
+            id: 1,
+            username: 'admin',
+            password: 'admin123',
+            email: 'admin@viltud.com',
+            isAdmin: true,
+            videos: [],
+            likes: [],
+            subscribers: 0,
+            comments: 0
+        };
+
+        // Sample videos data for initial demo
+        const SAMPLE_VIDEOS = [
+            {
+                id: 1,
+                title: "Добро пожаловать на Viltud!",
+                description: "Это демонстрационное видео платформы Viltud. Здесь вы можете загружать свои видео, смотреть видео других пользователей, комментировать и ставить лайки.",
+                authorId: 1,
+                views: 1000,
+                likes: 150,
+                commentsCount: 25,
+                date: "1 янв 2024",
+                duration: "2:15",
+                category: "Образование",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+                thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerJoyrides.jpg"
+            },
+            {
+                id: 2,
+                title: "Как пользоваться платформой",
+                description: "Краткое руководство по использованию всех функций Viltud: загрузка видео, комментирование, подписки и многое другое.",
+                authorId: 1,
+                views: 850,
+                likes: 120,
+                commentsCount: 18,
+                date: "5 янв 2024",
+                duration: "5:30",
+                category: "Образование",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+                thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerFun.jpg"
+            },
+            {
+                id: 3,
+                title: "Пример музыкального видео",
+                description: "Демонстрация музыкального контента на платформе Viltud.",
+                authorId: 1,
+                views: 1200,
+                likes: 200,
+                commentsCount: 35,
+                date: "10 янв 2024",
+                duration: "4:20",
+                category: "Музыка",
+                videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg"
+            }
+        ];
+
+        // Default comments for videos
+        const DEFAULT_COMMENTS = [
+            {
+                id: 1,
+                videoId: 1,
+                userId: 1,
+                username: "admin",
+                text: "Добро пожаловать на нашу платформу! Здесь вы можете делиться своими видео с миром.",
+                date: "1 янв 2024, 10:00",
+                likes: 10,
+                likedBy: []
+            },
+            {
+                id: 2,
+                videoId: 1,
+                userId: 1,
+                username: "admin",
+                text: "Не стесняйтесь задавать вопросы в комментариях!",
+                date: "1 янв 2024, 11:30",
+                likes: 5,
+                likedBy: []
+            },
+            {
+                id: 3,
+                videoId: 2,
+                userId: 1,
+                username: "admin",
+                text: "Надеюсь, это руководство поможет вам начать работу с платформой.",
+                date: "5 янв 2024, 09:15",
+                likes: 8,
+                likedBy: []
+            }
+        ];
+
+        // Initialize data
+        function initData() {
+            if (users.length === 0) {
+                users.push(DEFAULT_ADMIN);
+                localStorage.setItem('viltud_users', JSON.stringify(users));
+            }
+            
+            if (videos.length === 0) {
+                videos = SAMPLE_VIDEOS;
+                localStorage.setItem('viltud_videos', JSON.stringify(videos));
+            }
+            
+            if (comments.length === 0) {
+                comments = DEFAULT_COMMENTS;
+                localStorage.setItem('viltud_comments', JSON.stringify(comments));
+            }
+            
+            loadVideos();
+            updateUI();
+        }
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${isError ? 'error' : ''}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Authentication functions
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.add('active');
+        }
+
+        function hideAuthModal() {
+            document.getElementById('auth-modal').classList.remove('active');
+        }
+
+        function toggleAuthForm() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const authTitle = document.getElementById('auth-title');
+            const authSwitch = document.getElementById('auth-switch');
+            
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'flex';
+                registerForm.style.display = 'none';
+                authTitle.textContent = 'Вход';
+                authSwitch.textContent = 'Нет аккаунта? Зарегистрируйтесь';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'flex';
+                authTitle.textContent = 'Регистрация';
+                authSwitch.textContent = 'Уже есть аккаунт? Войти';
+            }
+        }
+
+        function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                showNotification('Заполните все поля', true);
+                return;
+            }
+            
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('viltud_currentUser', JSON.stringify(currentUser));
+                hideAuthModal();
+                showNotification('Вход выполнен успешно!');
+                updateUI();
+                loadVideos();
+            } else {
+                showNotification('Неверное имя пользователя или пароль', true);
+            }
+        }
+
+        function register() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const email = document.getElementById('register-email').value;
+            
+            if (!username || !password || !email) {
+                showNotification('Заполните все поля', true);
+                return;
+            }
+            
+            if (users.some(u => u.username === username)) {
+                showNotification('Имя пользователя уже занято', true);
+                return;
+            }
+            
+            const newUser = {
+                id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
+                username,
+                password,
+                email,
+                isAdmin: false,
+                videos: [],
+                likes: [],
+                subscribers: 0,
+                comments: 0
+            };
+            
+            users.push(newUser);
+            localStorage.setItem('viltud_users', JSON.stringify(users));
+            
+            showNotification('Регистрация успешна!');
+            toggleAuthForm();
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('viltud_currentUser');
+            showNotification('Вы вышли из системы');
+            updateUI();
+            showPage('home');
+        }
+
+        // Page navigation
+        function showPage(pageName) {
+            document.getElementById('home-page').style.display = 'none';
+            document.getElementById('video-player-page').style.display = 'none';
+            document.getElementById('upload-page').style.display = 'none';
+            document.getElementById('support-page').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('profile-page').style.display = 'none';
+            
+            switch(pageName) {
+                case 'home':
+                    document.getElementById('home-page').style.display = 'block';
+                    loadVideos();
+                    break;
+                case 'video-player-page':
+                    document.getElementById('video-player-page').style.display = 'block';
+                    break;
+                case 'upload':
+                    if (currentUser) {
+                        document.getElementById('upload-page').style.display = 'block';
+                    } else {
+                        showNotification('Войдите в систему', true);
+                        showAuthModal();
+                    }
+                    break;
+                case 'support':
+                    document.getElementById('support-page').style.display = 'block';
+                    loadSupportTickets();
+                    break;
+                case 'profile':
+                    if (currentUser) {
+                        document.getElementById('profile-page').style.display = 'block';
+                        loadProfile();
+                    } else {
+                        showNotification('Войдите в систему', true);
+                        showAuthModal();
+                    }
+                    break;
+            }
+        }
+
+        // Video functions
+        function loadVideos() {
+            const videoGrid = document.getElementById('video-grid');
+            videoGrid.innerHTML = '';
+            
+            if (videos.length === 0) {
+                videoGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #aaa;">
+                        <h3>Видео пока нет</h3>
+                        <p>Будьте первым, кто загрузит видео!</p>
+                        <button class="upload-btn" onclick="showPage('upload')" style="margin-top: 20px;">
+                            📤 Загрузить первое видео
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            videos.forEach(video => {
+                const author = users.find(u => u.id === video.authorId) || { username: 'Неизвестный' };
+                const videoElement = `
+                    <div class="video-card" onclick="playVideo(${video.id})">
+                        <div class="video-thumbnail">
+                            <img src="${video.thumbnail}" 
+                                 alt="${video.title}"
+                                 onerror="this.src='https://via.placeholder.com/320x180/333/fff?text=Нет+превью'">
+                            <div class="video-duration">${video.duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="video-channel">
+                                <span>${author.username}</span>
+                            </div>
+                            <div class="video-stats">
+                                <span>${video.views.toLocaleString()} просмотров</span>
+                                <span>${video.likes.toLocaleString()} лайков</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                videoGrid.innerHTML += videoElement;
+            });
+        }
+
+        function playVideo(videoId) {
+            currentVideoId = videoId;
+            const video = videos.find(v => v.id === videoId);
+            if (!video) {
+                showNotification('Видео не найдено', true);
+                return;
+            }
+            
+            // Увеличиваем просмотры
+            video.views++;
+            localStorage.setItem('viltud_videos', JSON.stringify(videos));
+            
+            const author = users.find(u => u.id === video.authorId);
+            
+            // Получаем видео элемент
+            currentVideoElement = document.getElementById('video-player-element');
+            
+            // Устанавливаем источник видео
+            currentVideoElement.src = video.videoUrl;
+            currentVideoElement.load();
+            currentVideoElement.play();
+            
+            // Обновляем информацию о видео
+            document.getElementById('video-title').textContent = video.title;
+            document.getElementById('video-views').textContent = video.views.toLocaleString();
+            document.getElementById('video-date').textContent = video.date;
+            document.getElementById('video-category').textContent = video.category;
+            document.getElementById('video-description').textContent = video.description;
+            document.getElementById('like-count').textContent = video.likes.toLocaleString();
+            document.getElementById('subscriber-count').textContent = author?.subscribers || 0;
+            
+            // Проверяем, лайкал ли пользователь это видео
+            if (currentUser && currentUser.likes && currentUser.likes.includes(videoId)) {
+                document.getElementById('like-btn').classList.add('active');
+            } else {
+                document.getElementById('like-btn').classList.remove('active');
+            }
+            
+            // Проверяем подписку
+            if (currentUser && author && subscriptions[currentUser.id] && subscriptions[currentUser.id].includes(author.id)) {
+                document.getElementById('subscribe-btn').classList.add('active');
+                document.getElementById('subscribe-btn').innerHTML = '📌 Отписаться <span id="subscriber-count">' + (author.subscribers || 0) + '</span>';
+            } else {
+                document.getElementById('subscribe-btn').classList.remove('active');
+                document.getElementById('subscribe-btn').innerHTML = '📌 Подписаться <span id="subscriber-count">' + (author.subscribers || 0) + '</span>';
+            }
+            
+            // Загружаем комментарии
+            loadComments();
+            
+            // Загружаем рекомендуемые видео
+            loadRecommendedVideos();
+            
+            // Показываем страницу видео
+            showPage('video-player-page');
+        }
+
+        function playNextVideo() {
+            if (!currentVideoId) return;
+            
+            const currentIndex = videos.findIndex(v => v.id === currentVideoId);
+            const nextIndex = (currentIndex + 1) % videos.length;
+            
+            playVideo(videos[nextIndex].id);
+        }
+
+        function loadRecommendedVideos() {
+            if (!currentVideoId) return;
+            
+            const recommendedVideos = document.getElementById('recommended-videos');
+            recommendedVideos.innerHTML = '';
+            
+            // Показываем 3 случайных видео (кроме текущего)
+            const otherVideos = videos.filter(v => v.id !== currentVideoId);
+            if (otherVideos.length === 0) return;
+            
+            const shuffled = otherVideos.sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, 3);
+            
+            selected.forEach(video => {
+                const author = users.find(u => u.id === video.authorId) || { username: 'Неизвестный' };
+                const videoElement = `
+                    <div class="video-card" onclick="playVideo(${video.id})">
+                        <div class="video-thumbnail">
+                            <img src="${video.thumbnail}" 
+                                 alt="${video.title}"
+                                 onerror="this.src='https://via.placeholder.com/320x180/333/fff?text=Нет+превью'">
+                            <div class="video-duration">${video.duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="video-channel">
+                                <span>${author.username}</span>
+                            </div>
+                            <div class="video-stats">
+                                <span>${video.views.toLocaleString()} просмотров</span>
+                                <span>${video.likes.toLocaleString()} лайков</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                recommendedVideos.innerHTML += videoElement;
+            });
+        }
+
+        function likeVideo() {
+            if (!currentUser) {
+                showNotification('Войдите, чтобы ставить лайки', true);
+                return;
+            }
+            
+            if (!currentVideoId) return;
+            
+            const video = videos.find(v => v.id === currentVideoId);
+            if (!video) return;
+            
+            const likeBtn = document.getElementById('like-btn');
+            const likeCount = document.getElementById('like-count');
+            
+            if (!currentUser.likes) currentUser.likes = [];
+            
+            if (currentUser.likes.includes(video.id)) {
+                // Убираем лайк
+                video.likes--;
+                currentUser.likes = currentUser.likes.filter(id => id !== video.id);
+                likeBtn.classList.remove('active');
+            } else {
+                // Ставим лайк
+                video.likes++;
+                currentUser.likes.push(video.id);
+                likeBtn.classList.add('active');
+            }
+            
+            likeCount.textContent = video.likes.toLocaleString();
+            
+            // Обновляем хранилище
+            localStorage.setItem('viltud_videos', JSON.stringify(videos));
+            localStorage.setItem('viltud_users', JSON.stringify(users));
+            localStorage.setItem('viltud_currentUser', JSON.stringify(currentUser));
+            
+            // Обновляем профиль если открыт
+            if (document.getElementById('profile-page').style.display === 'block') {
+                loadProfile();
+            }
+        }
+
+        function subscribeToChannel() {
+            if (!currentUser) {
+                showNotification('Войдите, чтобы подписываться', true);
+                return;
+            }
+            
+            if (!currentVideoId) return;
+            
+            const video = videos.find(v => v.id === currentVideoId);
+            if (!video) return;
+            
+            const author = users.find(u => u.id === video.authorId);
+            if (!author || author.id === currentUser.id) {
+                showNotification('Нельзя подписаться на себя', true);
+                return;
+            }
+            
+            const subscribeBtn = document.getElementById('subscribe-btn');
+            
+            if (!subscriptions[currentUser.id]) {
+                subscriptions[currentUser.id] = [];
+            }
+            
+            if (subscriptions[currentUser.id].includes(author.id)) {
+                // Отписываемся
+                author.subscribers = Math.max(0, (author.subscribers || 0) - 1);
+                subscriptions[currentUser.id] = subscriptions[currentUser.id].filter(id => id !== author.id);
+                subscribeBtn.classList.remove('active');
+                subscribeBtn.innerHTML = '📌 Подписаться <span id="subscriber-count">' + author.subscribers + '</span>';
+                showNotification('Вы отписались от ' + author.username);
+            } else {
+                // Подписываемся
+                author.subscribers = (author.subscribers || 0) + 1;
+                subscriptions[currentUser.id].push(author.id);
+                subscribeBtn.classList.add('active');
+                subscribeBtn.innerHTML = '📌 Отписаться <span id="subscriber-count">' + author.subscribers + '</span>';
+                showNotification('Вы подписались на ' + author.username);
+            }
+            
+            // Обновляем хранилище
+            localStorage.setItem('viltud_users', JSON.stringify(users));
+            localStorage.setItem('viltud_subscriptions', JSON.stringify(subscriptions));
+            
+            // Обновляем профиль если открыт
+            if (document.getElementById('profile-page').style.display === 'block') {
+                loadProfile();
+            }
+        }
+
+        // Comments functions
+        function loadComments() {
+            if (!currentVideoId) return;
+            
+            const commentsList = document.getElementById('comments-list');
+            const videoComments = comments.filter(c => c.videoId === currentVideoId);
+            
+            document.getElementById('comments-count').textContent = videoComments.length;
+            commentsList.innerHTML = '';
+            
+            if (videoComments.length === 0) {
+                commentsList.innerHTML = '<p style="color: #aaa; text-align: center;">Комментариев пока нет. Будьте первым!</p>';
+                return;
+            }
+            
+            // Сортируем комментарии по количеству лайков (самые популярные первые)
+            videoComments.sort((a, b) => b.likes - a.likes);
+            
+            videoComments.forEach(comment => {
+                const commentElement = createCommentElement(comment);
+                commentsList.innerHTML += commentElement;
+            });
+        }
+
+        function createCommentElement(comment) {
+            const user = users.find(u => u.id === comment.userId) || { username: 'Неизвестный' };
+            const isLiked = comment.likedBy && comment.likedBy.includes(currentUser ? currentUser.id : -1);
+            const canDelete = currentUser && (currentUser.isAdmin || currentUser.id === comment.userId);
+            
+            return `
+                <div class="comment" id="comment-${comment.id}">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            <div class="comment-avatar">${user.username.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="comment-username">${user.username}</div>
+                                <div class="comment-date">${comment.date}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comment-text">${comment.text}</div>
+                    <div class="comment-actions">
+                        <button class="comment-like ${isLiked ? 'active' : ''}" onclick="likeComment(${comment.id})">
+                            👍 ${comment.likes || 0}
+                        </button>
+                        ${canDelete ? `<button class="comment-delete" onclick="deleteComment(${comment.id})">Удалить</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function addComment() {
+            if (!currentUser) {
+                showNotification('Войдите, чтобы комментировать', true);
+                return;
+            }
+            
+            const commentText = document.getElementById('comment-text').value.trim();
+            if (!commentText) {
+                showNotification('Введите текст комментария', true);
+                return;
+            }
+            
+            const newComment = {
+                id: comments.length > 0 ? Math.max(...comments.map(c => c.id)) + 1 : 1,
+                videoId: currentVideoId,
+                userId: currentUser.id,
+                username: currentUser.username,
+                text: commentText,
+                date: new Date().toLocaleString('ru-RU'),
+                likes: 0,
+                likedBy: []
+            };
+            
+            comments.push(newComment);
+            localStorage.setItem('viltud_comments', JSON.stringify(comments));
+            
+            // Увеличиваем счетчик комментариев пользователя
+            if (!currentUser.comments) currentUser.comments = 0;
+            currentUser.comments++;
+            
+            // Обновляем хранилище
+            localStorage.setItem('viltud_users', JSON.stringify(users));
+            localStorage.setItem('viltud_currentUser', JSON.stringify(currentUser));
+            
+            document.getElementById('comment-text').value = '';
+            loadComments();
+            showNotification('Комментарий добавлен');
+            
+            // Обновляем профиль если открыт
+            if (document.getElementById('profile-page').style.display === 'block') {
+                loadProfile();
+            }
+        }
+
+        function likeComment(commentId) {
+            if (!currentUser) {
+                showNotification('Войдите, чтобы ставить лайки', true);
+                return;
+            }
+            
+            const comment = comments.find(c => c.id === commentId);
+            if (!comment) return;
+            
+            if (!comment.likedBy) comment.likedBy = [];
+            
+            if (comment.likedBy.includes(currentUser.id)) {
+                // Убираем лайк
+                comment.likes--;
+                comment.likedBy = comment.likedBy.filter(id => id !== currentUser.id);
+            } else {
+                // Ставим лайк
+                comment.likes++;
+                comment.likedBy.push(currentUser.id);
+            }
+            
+            localStorage.setItem('viltud_comments', JSON.stringify(comments));
+            loadComments();
+        }
+
+        function deleteComment(commentId) {
+            if (!currentUser) return;
+            
+            const comment = comments.find(c => c.id === commentId);
+            if (!comment) return;
+            
+            // Проверяем права
+            if (!currentUser.isAdmin && currentUser.id !== comment.userId) {
+                showNotification('Вы не можете удалить этот комментарий', true);
+                return;
+            }
+            
+            if (confirm('Удалить этот комментарий?')) {
+                // Уменьшаем счетчик комментариев пользователя
+                const commentUser = users.find(u => u.id === comment.userId);
+                if (commentUser && commentUser.comments > 0) {
+                    commentUser.comments--;
+                }
+                
+                comments = comments.filter(c => c.id !== commentId);
+                localStorage.setItem('viltud_comments', JSON.stringify(comments));
+                localStorage.setItem('viltud_users', JSON.stringify(users));
+                
+                showNotification('Комментарий удален');
+                loadComments();
+                
+                // Обновляем профиль если открыт
+                if (document.getElementById('profile-page').style.display === 'block') {
+                    loadProfile();
+                }
+            }
+        }
+
+        function previewThumbnail() {
+            const fileInput = document.getElementById('thumbnail-file');
+            const preview = document.getElementById('thumbnail-preview');
+            const previewImg = document.getElementById('thumbnail-preview-img');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        function uploadVideo() {
+            if (!currentUser) {
+                showNotification('Войдите в систему', true);
+                return;
+            }
+            
+            const title = document.getElementById('video-title-input').value.trim();
+            const description = document.getElementById('video-description-input').value.trim();
+            const category = document.getElementById('video-category-input').value;
+            const videoFileInput = document.getElementById('video-file');
+            const thumbnailFileInput = document.getElementById('thumbnail-file');
+            
+            if (!title || !description || !category) {
+                showNotification('Заполните все обязательные поля', true);
+                return;
+            }
+            
+            if (!videoFileInput.files[0]) {
+                showNotification('Выберите видео файл', true);
+                return;
+            }
+            
+            // Для демо-версии используем тестовые видео URL, так как браузер не может сохранять большие файлы
+            // В реальном приложении здесь должен быть код для загрузки файлов на сервер
+            
+            // Тестовые видео для демо
+            const demoVideos = [
+                {
+                    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+                    duration: "10:34"
+                },
+                {
+                    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",
+                    duration: "15:14"
+                },
+                {
+                    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
+                    duration: "15:24"
+                },
+                {
+                    url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+                    thumbnail: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerEscapes.jpg",
+                    duration: "15:54"
+                }
+            ];
+            
+            const randomDemo = demoVideos[Math.floor(Math.random() * demoVideos.length)];
+            
+            // Генерируем уникальный ID
+            const newId = videos.length > 0 ? Math.max(...videos.map(v => v.id)) + 1 : 1;
+            
+            // Пытаемся создать превью из загруженного изображения
+            let thumbnailUrl = randomDemo.thumbnail;
+            if (thumbnailFileInput.files && thumbnailFileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    thumbnailUrl = e.target.result;
+                };
+                reader.readAsDataURL(thumbnailFileInput.files[0]);
+            }
+            
+            const newVideo = {
+                id: newId,
+                title,
+                description,
+                authorId: currentUser.id,
+                views: 0,
+                likes: 0,
+                commentsCount: 0,
+                date: new Date().toLocaleDateString('ru-RU'),
+                duration: randomDemo.duration,
+                category,
+                videoUrl: randomDemo.url,
+                thumbnail: thumbnailUrl
+            };
+            
+            videos.push(newVideo);
+            localStorage.setItem('viltud_videos', JSON.stringify(videos));
+            
+            if (!currentUser.videos) currentUser.videos = [];
+            currentUser.videos.push(newVideo.id);
+            
+            // Обновляем пользователя в массиве users
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+            }
+            
+            localStorage.setItem('viltud_users', JSON.stringify(users));
+            localStorage.setItem('viltud_currentUser', JSON.stringify(currentUser));
+            
+            showNotification('Видео загружено успешно! Оно появится в общем списке.');
+            
+            // Сброс формы
+            document.getElementById('video-title-input').value = '';
+            document.getElementById('video-description-input').value = '';
+            document.getElementById('video-category-input').value = '';
+            document.getElementById('video-file').value = '';
+            document.getElementById('thumbnail-file').value = '';
+            document.getElementById('thumbnail-preview').style.display = 'none';
+            
+            loadVideos();
+            showPage('home');
+        }
+
+        // Support system
+        function sendSupportTicket() {
+            if (!currentUser) {
+                showNotification('Войдите в систему', true);
+                return;
+            }
+            
+            const message = document.getElementById('support-message').value;
+            if (!message) {
+                showNotification('Введите сообщение', true);
+                return;
+            }
+            
+            const newTicket = {
+                id: supportTickets.length + 1,
+                userId: currentUser.id,
+                username: currentUser.username,
+                message,
+                date: new Date().toLocaleString('ru-RU'),
+                status: 'open'
+            };
+            
+            supportTickets.push(newTicket);
+            localStorage.setItem('viltud_tickets', JSON.stringify(supportTickets));
+            
+            document.getElementById('support-message').value = '';
+            showNotification('Обращение отправлено в техподдержку');
+            loadSupportTickets();
+        }
+
+        function loadSupportTickets() {
+            const userTicketsList = document.getElementById('user-tickets-list');
+            const ticketsList = document.getElementById('tickets-list');
+            
+            userTicketsList.innerHTML = '';
+            ticketsList.innerHTML = '';
+            
+            // Показываем обращения пользователя
+            if (currentUser) {
+                const userTickets = supportTickets.filter(ticket => ticket.userId === currentUser.id);
+                
+                if (userTickets.length === 0) {
+                    userTicketsList.innerHTML = '<p style="color: #aaa; text-align: center;">У вас нет обращений в техподдержку</p>';
+                } else {
+                    userTickets.forEach(ticket => {
+                        const ticketElement = `
+                            <div class="ticket">
+                                <div class="ticket-header">
+                                    <span class="ticket-user">Вы</span>
+                                    <span class="ticket-status status-${ticket.status}">${ticket.status === 'open' ? 'Открыто' : 'Закрыто'}</span>
+                                </div>
+                                <p>${ticket.message}</p>
+                                <small>${ticket.date}</small>
+                            </div>
+                        `;
+                        userTicketsList.innerHTML += ticketElement;
+                    });
+                }
+            } else {
+                userTicketsList.innerHTML = '<p style="color: #aaa; text-align: center;">Войдите, чтобы увидеть свои обращения</p>';
+            }
+            
+            // Показываем все обращения для админа
+            if (currentUser && currentUser.isAdmin) {
+                document.getElementById('admin-tickets').style.display = 'block';
+                
+                if (supportTickets.length === 0) {
+                    ticketsList.innerHTML = '<p style="color: #aaa; text-align: center;">Нет обращений в техподдержку</p>';
+                } else {
+                    supportTickets.forEach(ticket => {
+                        const ticketUser = users.find(u => u.id === ticket.userId);
+                        const ticketElement = `
+                            <div class="ticket">
+                                <div class="ticket-header">
+                                    <span class="ticket-user">${ticket.username}</span>
+                                    <span class="ticket-status status-${ticket.status}">${ticket.status === 'open' ? 'Открыто' : 'Закрыто'}</span>
+                                </div>
+                                <p>${ticket.message}</p>
+                                <small>${ticket.date}</small>
+                                <div style="margin-top: 10px;">
+                                    <button onclick="closeTicket(${ticket.id})" class="admin-btn-small" ${ticket.status === 'closed' ? 'disabled' : ''}>
+                                        Закрыть
+                                    </button>
+                                    <button onclick="deleteTicket(${ticket.id})" class="admin-btn-small" style="background-color: #dc3545;">
+                                        Удалить
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        ticketsList.innerHTML += ticketElement;
+                    });
+                }
+            } else {
+                document.getElementById('admin-tickets').style.display = 'none';
+            }
+        }
+
+        function closeTicket(ticketId) {
+            const ticket = supportTickets.find(t => t.id === ticketId);
+            if (ticket) {
+                ticket.status = 'closed';
+                localStorage.setItem('viltud_tickets', JSON.stringify(supportTickets));
+                loadSupportTickets();
+                showNotification('Обращение закрыто');
+            }
+        }
+
+        function deleteTicket(ticketId) {
+            supportTickets = supportTickets.filter(t => t.id !== ticketId);
+            localStorage.setItem('viltud_tickets', JSON.stringify(supportTickets));
+            loadSupportTickets();
+            showNotification('Обращение удалено');
+        }
+
+        // Admin functions
+        function toggleAdminPanel() {
+            if (!currentUser || !currentUser.isAdmin) {
+                showNotification('Доступ запрещен', true);
+                return;
+            }
+            
+            const adminPanel = document.getElementById('admin-panel');
+            adminPanel.style.display = adminPanel.style.display === 'none' ? 'block' : 'none';
+            
+            if (adminPanel.style.display === 'block') {
+                loadAdminData();
+            }
+        }
+
+        function loadAdminData() {
+            // Загружаем пользователей
+            const usersTable = document.getElementById('users-table');
+            usersTable.innerHTML = '';
+            
+            users.forEach(user => {
+                const userVideos = videos.filter(v => v.authorId === user.id);
+                const userComments = comments.filter(c => c.userId === user.id);
+                const userRow = `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.username} ${user.isAdmin ? '(Админ)' : ''}</td>
+                        <td>${user.isAdmin ? 'Администратор' : 'Пользователь'}</td>
+                        <td>${userVideos.length}</td>
+                        <td>${user.subscribers || 0}</td>
+                        <td>${userComments.length}</td>
+                        <td>
+                            <button onclick="deleteUser(${user.id})" class="admin-btn-small" ${user.isAdmin ? 'disabled' : ''}>
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                usersTable.innerHTML += userRow;
+            });
+            
+            // Загружаем видео
+            const videosTable = document.getElementById('videos-table');
+            videosTable.innerHTML = '';
+            
+            videos.forEach(video => {
+                const author = users.find(u => u.id === video.authorId) || { username: 'Неизвестный' };
+                const videoComments = comments.filter(c => c.videoId === video.id);
+                const videoRow = `
+                    <tr>
+                        <td>${video.id}</td>
+                        <td>${video.title}</td>
+                        <td>${author.username}</td>
+                        <td>${video.views}</td>
+                        <td>${video.likes}</td>
+                        <td>${videoComments.length}</td>
+                        <td>
+                            <button onclick="deleteVideo(${video.id})" class="admin-btn-small">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                videosTable.innerHTML += videoRow;
+            });
+            
+            // Загружаем комментарии
+            const commentsTable = document.getElementById('comments-table');
+            commentsTable.innerHTML = '';
+            
+            comments.forEach(comment => {
+                const video = videos.find(v => v.id === comment.videoId);
+                const user = users.find(u => u.id === comment.userId);
+                const commentRow = `
+                    <tr>
+                        <td>${comment.id}</td>
+                        <td>${video ? video.title : 'Видео удалено'}</td>
+                        <td>${user ? user.username : 'Неизвестный'}</td>
+                        <td>${comment.text.length > 50 ? comment.text.substring(0, 50) + '...' : comment.text}</td>
+                        <td>${comment.date}</td>
+                        <td>${comment.likes}</td>
+                        <td>
+                            <button onclick="adminDeleteComment(${comment.id})" class="admin-btn-small">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                commentsTable.innerHTML += commentRow;
+            });
+        }
+
+        function adminDeleteComment(commentId) {
+            if (!confirm('Удалить этот комментарий?')) return;
+            
+            const comment = comments.find(c => c.id === commentId);
+            if (!comment) return;
+            
+            // Уменьшаем счетчик комментариев пользователя
+            const commentUser = users.find(u => u.id === comment.userId);
+            if (commentUser && commentUser.comments > 0) {
+                commentUser.comments--;
+            }
+            
+            comments = comments.filter(c => c.id !== commentId);
+            localStorage.setItem('viltud_comments', JSON.stringify(comments));
+            localStorage.setItem('viltud_users', JSON.stringify(users));
+            
+            showNotification('Комментарий удален');
+            loadAdminData();
+            loadComments();
+        }
+
+        function deleteUser(userId) {
+            if (!confirm('Удалить пользователя? Все его видео и комментарии также будут удалены.')) {
+                return;
+            }
+            
+            // Не удаляем админа
+            const user = users.find(u => u.id === userId);
+            if (user && user.isAdmin) {
+                showNotification('Нельзя удалить администратора', true);
+                return;
+            }
+            
+            // Удаляем видео пользователя
+            videos = videos.filter(v => v.authorId !== userId);
+            
+            // Удаляем комментарии пользователя
+            comments = comments.filter(c => c.userId !== userId);
+            
+            // Удаляем пользователя
+            users = users.filter(u => u.id !== userId);
+            
+            // Обновляем хранилище
+            localStorage.setItem('viltud_users', JSON.stringify(users));
+            localStorage.setItem('viltud_videos', JSON.stringify(videos));
+            localStorage.setItem('viltud_comments', JSON.stringify(comments));
+            
+            showNotification('Пользователь удален');
+            loadAdminData();
+        }
+
+        function deleteVideo(videoId) {
+            if (!confirm('Удалить это видео и все комментарии к нему?')) {
+                return;
+            }
+            
+            // Удаляем видео
+            videos = videos.filter(v => v.id !== videoId);
+            
+            // Удаляем комментарии к видео
+            comments = comments.filter(c => c.videoId !== videoId);
+            
+            localStorage.setItem('viltud_videos', JSON.stringify(videos));
+            localStorage.setItem('viltud_comments', JSON.stringify(comments));
+            
+            showNotification('Видео удалено');
+            loadAdminData();
+            loadVideos();
+        }
+
+        function switchAccount() {
+            const username = document.getElementById('switch-username').value;
+            if (!username) {
+                showNotification('Введите имя пользователя', true);
+                return;
+            }
+            
+            const user = users.find(u => u.username === username);
+            if (!user) {
+                showNotification('Пользователь не найден', true);
+                return;
+            }
+            
+            currentUser = user;
+            localStorage.setItem('viltud_currentUser', JSON.stringify(currentUser));
+            
+            showNotification(`Переключен на аккаунт: ${username}`);
+            updateUI();
+            document.getElementById('switch-username').value = '';
+        }
+
+        function deleteUserAccount() {
+            if (!currentUser) return;
+            
+            if (confirm(`Вы уверены, что хотите удалить аккаунт ${currentUser.username}?`)) {
+                users = users.filter(u => u.id !== currentUser.id);
+                videos = videos.filter(v => v.authorId !== currentUser.id);
+                comments = comments.filter(c => c.userId !== currentUser.id);
+                
+                localStorage.setItem('viltud_users', JSON.stringify(users));
+                localStorage.setItem('viltud_videos', JSON.stringify(videos));
+                localStorage.setItem('viltud_comments', JSON.stringify(comments));
+                
+                logout();
+                showNotification('Аккаунт удален');
+            }
+        }
+
+        // Profile functions
+        function loadProfile() {
+            if (!currentUser) return;
+            
+            document.getElementById('profile-username').textContent = currentUser.username;
+            document.getElementById('profile-email').textContent = currentUser.email;
+            document.getElementById('profile-avatar').textContent = currentUser.username.charAt(0).toUpperCase();
+            
+            const userVideos = videos.filter(v => v.authorId === currentUser.id);
+            const userComments = comments.filter(c => c.userId === currentUser.id);
+            
+            document.getElementById('profile-videos').textContent = userVideos.length;
+            document.getElementById('profile-subscribers').textContent = currentUser.subscribers || 0;
+            document.getElementById('profile-comments').textContent = userComments.length;
+            
+            // Считаем общее количество лайков и просмотров
+            const totalLikes = userVideos.reduce((sum, v) => sum + v.likes, 0);
+            const totalViews = userVideos.reduce((sum, v) => sum + v.views, 0);
+            
+            document.getElementById('profile-likes').textContent = totalLikes;
+            document.getElementById('profile-views').textContent = totalViews;
+            
+            // Загружаем видео пользователя
+            const profileVideosGrid = document.getElementById('profile-videos-grid');
+            profileVideosGrid.innerHTML = '';
+            
+            userVideos.forEach(video => {
+                const videoElement = `
+                    <div class="video-card" onclick="playVideo(${video.id})">
+                        <div class="video-thumbnail">
+                            <img src="${video.thumbnail}" 
+                                 alt="${video.title}"
+                                 onerror="this.src='https://via.placeholder.com/320x180/333/fff?text=Нет+превью'">
+                            <div class="video-duration">${video.duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="video-stats">
+                                <span>${video.views.toLocaleString()} просмотров</span>
+                                <span>${video.likes.toLocaleString()} лайков</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                profileVideosGrid.innerHTML += videoElement;
+            });
+            
+            // Загружаем комментарии пользователя
+            const profileCommentsList = document.getElementById('profile-comments-list');
+            profileCommentsList.innerHTML = '';
+            
+            if (userComments.length === 0) {
+                profileCommentsList.innerHTML = '<p style="color: #aaa; text-align: center;">Вы еще не оставляли комментариев</p>';
+            } else {
+                userComments.forEach(comment => {
+                    const video = videos.find(v => v.id === comment.videoId);
+                    const commentElement = `
+                        <div class="comment">
+                            <div class="comment-header">
+                                <div class="comment-author">
+                                    <div class="comment-avatar">${currentUser.username.charAt(0).toUpperCase()}</div>
+                                    <div>
+                                        <div class="comment-username">${currentUser.username}</div>
+                                        <div class="comment-date">${comment.date}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-text">
+                                <strong>Видео:</strong> ${video ? video.title : 'Видео удалено'}<br><br>
+                                ${comment.text}
+                            </div>
+                            <div class="comment-actions">
+                                <button class="comment-like" disabled>
+                                    👍 ${comment.likes || 0}
+                                </button>
+                                <button class="comment-delete" onclick="deleteComment(${comment.id})">Удалить</button>
+                            </div>
+                        </div>
+                    `;
+                    profileCommentsList.innerHTML += commentElement;
+                });
+            }
+        }
+
+        // Search function
+        function searchVideos() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            if (!searchTerm) {
+                loadVideos();
+                return;
+            }
+            
+            const videoGrid = document.getElementById('video-grid');
+            videoGrid.innerHTML = '';
+            
+            const filteredVideos = videos.filter(video => 
+                video.title.toLowerCase().includes(searchTerm) ||
+                video.description.toLowerCase().includes(searchTerm) ||
+                video.category.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredVideos.length === 0) {
+                videoGrid.innerHTML = '<p style="color: #aaa; text-align: center; grid-column: 1 / -1;">Видео не найдены</p>';
+                return;
+            }
+            
+            filteredVideos.forEach(video => {
+                const author = users.find(u => u.id === video.authorId) || { username: 'Неизвестный' };
+                const videoElement = `
+                    <div class="video-card" onclick="playVideo(${video.id})">
+                        <div class="video-thumbnail">
+                            <img src="${video.thumbnail}" 
+                                 alt="${video.title}"
+                                 onerror="this.src='https://via.placeholder.com/320x180/333/fff?text=Нет+превью'">
+                            <div class="video-duration">${video.duration}</div>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="video-channel">
+                                <span>${author.username}</span>
+                            </div>
+                            <div class="video-stats">
+                                <span>${video.views.toLocaleString()} просмотров</span>
+                                <span>${video.likes.toLocaleString()} лайков</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                videoGrid.innerHTML += videoElement;
+            });
+        }
+
+        // Update UI based on login state
+        function updateUI() {
+            const loginBtn = document.getElementById('login-btn');
+            const uploadBtn = document.getElementById('upload-btn');
+            const adminBtn = document.getElementById('admin-btn');
+            const profileBtn = document.getElementById('profile-btn');
+            const commentForm = document.getElementById('comment-form');
+            
+            if (currentUser) {
+                loginBtn.textContent = 'Выйти';
+                loginBtn.onclick = logout;
+                uploadBtn.style.display = 'block';
+                profileBtn.style.display = 'block';
+                commentForm.style.display = 'block';
+                
+                if (currentUser.isAdmin) {
+                    adminBtn.style.display = 'block';
+                } else {
+                    adminBtn.style.display = 'none';
+                }
+            } else {
+                loginBtn.textContent = 'Войти';
+                loginBtn.onclick = showAuthModal;
+                uploadBtn.style.display = 'none';
+                adminBtn.style.display = 'none';
+                profileBtn.style.display = 'none';
+                commentForm.style.display = 'none';
+            }
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initData();
+            updateUI();
+        };
+    </script>
+</body>
+</html>
